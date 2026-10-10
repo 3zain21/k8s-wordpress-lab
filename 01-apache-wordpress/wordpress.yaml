@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  labels:
+    app: wordpress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+      - name: wordpress
+        image: wordpress:6-apache
+        ports:
+        - containerPort: 80
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: mysql
+        - name: WORDPRESS_DB_NAME
+          value: wordpress
+        - name: WORDPRESS_DB_USER
+          value: wpuser
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef: {name: mysql-secret, key: password}
+        - name: WORDPRESS_AUTH_KEY
+          valueFrom:
+            secretKeyRef: {name: wp-salts, key: AUTH_KEY}
+        - name: WORDPRESS_SECURE_AUTH_KEY
+          valueFrom:
+            secretKeyRef: {name: wp-salts, key: SECURE_AUTH_KEY}
+        - name: WORDPRESS_LOGGED_IN_KEY
+          valueFrom:
+            secretKeyRef: {name: wp-salts, key: LOGGED_IN_KEY}
+        - name: WORDPRESS_NONCE_KEY
+          valueFrom:
+            secretKeyRef: {name: wp-salts, key: NONCE_KEY}
+        - name: WORDPRESS_AUTH_SALT
+          valueFrom:
+            secretKeyRef: {name: wp-salts, key: AUTH_SALT}
+        - name: WORDPRESS_SECURE_AUTH_SALT
+          valueFrom:
+            secretKeyRef: {name: wp-salts, key: SECURE_AUTH_SALT}
+        - name: WORDPRESS_LOGGED_IN_SALT
+          valueFrom:
+            secretKeyRef: {name: wp-salts, key: LOGGED_IN_SALT}
+        - name: WORDPRESS_NONCE_SALT
+          valueFrom:
+            secretKeyRef: {name: wp-salts, key: NONCE_SALT}
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        volumeMounts:
+        - name: wp-data
+          mountPath: /var/www/html
+      volumes:
+      - name: wp-data
+        persistentVolumeClaim:
+          claimName: wp-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-service
+spec:
+  type: NodePort
+  selector:
+    app: wordpress
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30009

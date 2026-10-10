@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: wpn-wp-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  nfs:
+    server: 192.168.2.147
+    path: /srv/nfs/wpn-wp
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: wpn-mysql-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes: [ReadWriteOnce]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  nfs:
+    server: 192.168.2.147
+    path: /srv/nfs/wpn-mysql
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wpn-wp-pvc
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: wpn-wp-pv
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wpn-mysql-pvc
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: ""
+  volumeName: wpn-mysql-pv
+  resources:
+    requests:
+      storage: 5Gi
